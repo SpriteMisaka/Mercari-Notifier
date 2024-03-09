@@ -4,7 +4,7 @@ import schedule
 import logging
 import requests
 
-from search import search_mercari
+from search import search_zenmarket
 
 def notify_discord(hook_url, item, old_item=None, proxies=None):
     embed = {
@@ -74,7 +74,7 @@ def job():
     reduced_items = {}
 
     for keyword in keywords:
-        for item in search_mercari(keyword, proxies=args['proxies']):
+        for item in search_zenmarket(keyword, proxies=args['proxies']):
             if item.id not in items:
                 new_items[item.id] = item
                 update_keywords(new_items_keywords_of, item.id, keyword)
@@ -108,7 +108,7 @@ def init():
     for keyword in args['keywords']:
         if keyword not in keywords:
             logging.info(f"Preprocessing items via keyword [{keyword}]...")
-            for item in search_mercari(keyword, proxies=args['proxies']):
+            for item in search_zenmarket(keyword, proxies=args['proxies']):
                 items[item.id] = item
     keywords = args['keywords']
 
