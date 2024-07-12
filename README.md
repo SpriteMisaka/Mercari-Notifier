@@ -13,6 +13,7 @@ python start.py
 ## TODO
 
 - [x] Mercari - メルカリ
-- [x] Yahoo! Auctions - ヤフオク!
+- [x] Yahoo! Auctions - Yahoo!オークション
+- [x] Yahoo! Flea Market - Yahoo!フリマ
 - [ ] Suruga-Ya - 駿河屋
 - [ ] Goofish - 闲鱼

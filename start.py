@@ -4,7 +4,7 @@ import schedule
 import logging
 import requests
 
-from search import search_zenmarket
+from search import search
 
 def notify_discord(hook_url, item, old_item=None, proxies=None):
     embed = {
@@ -55,7 +55,8 @@ def job():
     def update_keywords(keywords_of, id, keyword):
         if id not in keywords_of:
             keywords_of[id] = []
-        keywords_of[id].append(keyword)
+        if keyword not in keywords_of[id]:
+            keywords_of[id].append(keyword)
 
     def update_items_via_keywords(keywords_of, some_items, info):
         unique_values = [list(x) for x in set(tuple(x) for x in keywords_of.values())]
@@ -74,7 +75,9 @@ def job():
     reduced_items = {}
 
     for keyword in keywords:
-        for item in search_zenmarket(keyword, proxies=args['proxies']):
+        for item in search(keyword, proxies=args['proxies']):
+            if any(e in item.productName for e in args['exclude']):
+                continue
             if item.id not in items:
                 new_items[item.id] = item
                 update_keywords(new_items_keywords_of, item.id, keyword)
@@ -94,8 +97,9 @@ def load_json():
     with open('settings.json', 'r', encoding='UTF-8') as data_file:
         data = json.load(data_file)
         args['keywords'] = data['keywords']
-        args['hook_url'] = data['hook_url'] if data['hook_url'] else None
-        args['proxies'] = data['proxies'] if data['proxies'] else None
+        args['hook_url'] = data['hook_url'] or None
+        args['proxies'] = data['proxies'] or None
+        args['exclude'] = data['exclude'] or None
     return args
 
 
@@ -108,7 +112,7 @@ def init():
     for keyword in args['keywords']:
         if keyword not in keywords:
             logging.info(f"Preprocessing items via keyword [{keyword}]...")
-            for item in search_zenmarket(keyword, proxies=args['proxies']):
+            for item in search(keyword, proxies=args['proxies']):
                 items[item.id] = item
     keywords = args['keywords']
 
