@@ -78,7 +78,7 @@ def search(keyword, sites=['mercari', 'yahoo', 'paypay'], maximum_page=3, proxie
                         item.imageURL = i['Thumbnail']
 
                 elif site in ['paypay']:
-                    item.price = i['price']
+                    item.price = str(i['price'])
                     item.productID = i['id']
                     item.productName = i['title']
                     item.productURL = f"https://paypayfleamarket.yahoo.co.jp/item/{i['id']}"

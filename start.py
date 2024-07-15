@@ -4,31 +4,49 @@ import schedule
 import logging
 import requests
 
+from io import BytesIO
+
 from search import search
 
-def notify_discord(hook_url, item, old_item=None, proxies=None):
-    embed = {
-        'title': f'{item.productName}',
-        'url': f'{item.productURL}',
-        'fields': [
-            {
-                'name': '価格:',
-                'value': f" {item.price} 円" if old_item is None else f"~~{old_item.price}~~ {item.price} 円",
-                'inline': False
-            },
-        ],
-        'image': {
-            'url': item.imageURL,
-        },
-    }
 
-    payload_json = json.dumps({'embeds': [embed], 'username': 'Mercari'})
+def notify(style, item, old_item=None, proxies=None,
+           discord_hook_url=None, telegram_token=None, telegram_chat_id=None):
     while(True):
         try:
-            response = requests.post(hook_url,
-                                     payload_json,
-                                     headers={'Content-Type': 'application/json'},
-                                     proxies=proxies)
+            if style == 'discord':
+                url = discord_hook_url
+                embed = {
+                    'title': f'{item.productName}',
+                    'url': f'{item.productURL}',
+                    'fields': [
+                        {
+                            'name': '価格:',
+                            'value': f"{item.price} 円" if old_item is None else f"~~{old_item.price}~~ {item.price} 円",
+                            'inline': False
+                        },
+                    ],
+                    'image': {
+                        'url': item.imageURL,
+                    },
+                }
+                payload_json = json.dumps({'embeds': [embed], 'username': 'Mercari'})
+                response = requests.post(url, payload_json,
+                                         headers={'Content-Type': 'application/json'},
+                                         proxies=proxies)
+            elif style == 'telegram':
+                message =  f'<a href="{item.productURL}"><b>{item.productName}</b></a>\n' + '<b>価格:</b>\n' + \
+                    (f"{item.price} 円" if old_item is None else f"<del>{old_item.price}</del> {item.price} 円")
+                res = requests.get(item.imageURL, proxies=proxies)
+                image_bytes = res.content
+                image_stream = BytesIO(image_bytes)
+                params = {
+                    'chat_id': telegram_chat_id,
+                    'caption': message,
+                    'parse_mode': 'HTML'
+                }
+                response = requests.post(f'https://api.telegram.org/bot{telegram_token}/sendPhoto',
+                                         data=params, files={"photo": image_stream}, proxies=proxies)
+
         except Exception as e:
             logging.warning(e)
             time.sleep(10)
@@ -39,6 +57,7 @@ def notify_discord(hook_url, item, old_item=None, proxies=None):
             break
         else:
             time.sleep(10)
+
 
 def job():
 
@@ -65,10 +84,15 @@ def job():
             if len(ids) > 0:
                 logging.info(f"{info} {len(ids)} {'item' if len(ids) == 1 else 'items'} about [{', '.join(keyword_combination)}].")
                 for id in ids:
-                    if args['hook_url'] is not None:
-                        notify_discord(args['hook_url'], some_items[id], None if info == 'Found' else items[id], proxies=args['proxies'])
-                    else:
-                        logging.info(some_items[id].productURL)
+                    item = some_items[id]
+                    old_item = None if info == 'Found' else items[id]
+                    if args['discord_hook_url']:
+                        notify("discord", item, old_item, proxies=args['proxies'],
+                               discord_hook_url=args['discord_hook_url'])
+                    if args['telegram_token'] and args['telegram_chat_id']:
+                        notify("telegram", item, old_item, proxies=args['proxies'],
+                               telegram_token=args['telegram_token'], telegram_chat_id=args['telegram_chat_id'])
+                    logging.info(some_items[id].productURL)
                     items[id] = some_items[id]
 
     new_items = {}
@@ -97,7 +121,9 @@ def load_json():
     with open('settings.json', 'r', encoding='UTF-8') as data_file:
         data = json.load(data_file)
         args['keywords'] = data['keywords']
-        args['hook_url'] = data['hook_url'] or None
+        args['discord_hook_url'] = data['discord_hook_url'] or None
+        args['telegram_token'] = data['telegram_token'] or None
+        args['telegram_chat_id'] = data['telegram_chat_id'] or None
         args['proxies'] = data['proxies'] or None
         args['exclude'] = data['exclude'] or None
     return args

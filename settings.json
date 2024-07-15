@@ -1,6 +1,8 @@
 {
-    "keywords": ["狗神煌", "遊戯王 ネムレリア プリズマ", "25時、ナイトコードで。 CD"],
-    "hook_url": "",
+    "keywords": ["supergroupies", "遊戯王 ネムレリア プリズマ", "25時、ナイトコードで。 CD"],
+    "discord_hook_url": "",
+    "telegram_token": "",
+    "telegram_chat_id": "",
 	"proxies": {},
     "exclude": ["セット"]
 }

@@ -1,6 +1,6 @@
 # Mercari-Notifier
 
-Send discord messages when there are new products or price reductions on Mercari and Yahoo! Auction via zenmarket.jp.
+Send discord/telegram messages when there are new products or price reductions on Mercari.
 
 ## Usage
 
