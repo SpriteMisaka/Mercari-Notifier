@@ -15,5 +15,6 @@ python start.py
 - [x] Mercari - メルカリ
 - [x] Yahoo! Auctions - Yahoo!オークション
 - [x] Yahoo! Flea Market - Yahoo!フリマ
+- [x] Rakuten Rakuma - 楽天ラクマ
 - [ ] Suruga-Ya - 駿河屋
 - [ ] Goofish - 闲鱼
