@@ -6,7 +6,7 @@ Send discord/telegram messages when there are new products or price reductions o
 
 Configure parameters in `settings.json` and run the following command.
 
-```python
+```
 python start.py
 ```
 

@@ -1,8 +1,29 @@
 {
     "keywords": ["supergroupies", "遊戯王 ネムレリア プリズマ", "25時、ナイトコードで。 CD"],
+    "price_min": {
+        "遊戯王 ネムレリア プリズマ": 1000
+    },
+    "price_max": {
+        "supergroupies": 50000
+    },
     "discord_hook_url": "",
     "telegram_token": "",
     "telegram_chat_id": "",
 	"proxies": {},
-    "exclude": ["セット"]
+    "exclude": ["セット"],
+    "image_display": true,
+    "mercari_settings": {
+        "condition_filters": {
+            "新品、未使用": true,
+            "未使用に近い": true,
+            "目立った傷や汚れなし": true,
+            "やや傷や汚れあり": true,
+            "傷や汚れあり": true,
+            "中古": true
+        },
+        "extra_display": {
+            "seller": true,
+            "condition": true
+        }
+    }
 }

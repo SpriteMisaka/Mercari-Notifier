@@ -6,6 +6,16 @@ import requests
 from bs4 import BeautifulSoup
 
 
+MERCARI_CONDITIONS = {
+    "新品、未使用": "0",
+    "未使用に近い": "1",
+    "目立った傷や汚れなし": "2",
+    "やや傷や汚れあり": "3",
+    "傷や汚れあり": "4",
+    "中古": "5"
+}
+
+
 class Item:
     def __init__(self, site: str, productID: str):
         self.site = site
@@ -68,7 +78,8 @@ def parse_item(site, element):
     return None
 
 
-def search(keyword, sites=None, maximum_page=3, proxies=None):
+def search(keyword, args, sites=None, maximum_page=3) -> list[Item]:
+    proxies = args['proxies']
 
     if sites is None:
         sites = ['mercari', 'yahoo', 'paypay', 'rakuma']
@@ -82,7 +93,17 @@ def search(keyword, sites=None, maximum_page=3, proxies=None):
             while True:
                 res = []
                 try:
-                    if site in ['mercari', 'yahoo']:
+                    if site == 'mercari':
+                        condition_filters = args['mercari_settings']['condition_filters']
+                        conditions = [MERCARI_CONDITIONS[k] for k, v in condition_filters.items() if v]
+                        res.append(
+                            requests.post(
+                                f"https://zenmarket.jp/ja/{site}.aspx?q={keyword}&sort=new&order=desc&p={page}&condition={','.join(conditions)}",
+                                headers=headers,
+                                proxies=proxies
+                            )
+                        )
+                    elif site == 'yahoo':
                         res.append(
                             requests.post(f"https://zenmarket.jp/ja/{site}.aspx?q={keyword}&sort=new&order=desc&p={page}",
                                           headers=headers, proxies=proxies)
@@ -167,3 +188,31 @@ def search(keyword, sites=None, maximum_page=3, proxies=None):
                                     #     results.append(item)
 
     return results
+
+
+def mercari_details(url, args):
+    proxies = args['proxies']
+
+    while True:
+        try:
+            response = requests.get(url, headers=headers, proxies=proxies)
+        except Exception as e:
+            logging.warning(e)
+            time.sleep(10)
+            continue
+
+        if response.ok:
+            time.sleep(1)
+            break
+        else:
+            time.sleep(10)
+
+    soup = BeautifulSoup(response.content, 'html.parser')
+    condition_span = soup.find('span', {'id': 'lblConditionName'})
+    condition = condition_span.text if condition_span else "不明"
+    seller_span = soup.find('span', {'id': 'seller'})
+    seller_id = seller_span['sellerid'] if seller_span else "不明"
+    seller_name = seller_span.text if seller_span else "不明"
+    rate_span = soup.find('span', {'id': 'sellerRate_ratingValue'})
+    seller_rate = round(float(rate_span.text), 2) if rate_span else "不明"
+    return condition, seller_id, seller_name, seller_rate
